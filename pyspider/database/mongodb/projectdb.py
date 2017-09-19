@@ -27,6 +27,8 @@ class ProjectDB(BaseProjectDB):
             return each
         each.setdefault('group', None)
         each.setdefault('status', 'TODO')
+        each.setdefault('status', 'default')
+        each.setdefault('namespace', 'default')
         each.setdefault('script', '')
         each.setdefault('comments', None)
         each.setdefault('rate', 0)
@@ -34,17 +36,18 @@ class ProjectDB(BaseProjectDB):
         each.setdefault('updatetime', 0)
         return each
 
-    def insert(self, name, obj={}):
+    def insert(self,  name, obj={}, namespace='default'):
         obj = dict(obj)
+        obj['namespace'] = namespace
         obj['name'] = name
         obj['updatetime'] = time.time()
-        return self.collection.update({'name': name}, {'$set': obj}, upsert=True)
+        return self.collection.update({'namespace': namespace, 'name': name}, {'$set': obj}, upsert=True)
 
-    def update(self, name, obj={}, **kwargs):
+    def update(self, name, namespace='default', obj={}, **kwargs):
         obj = dict(obj)
         obj.update(kwargs)
         obj['updatetime'] = time.time()
-        return self.collection.update({'name': name}, {'$set': obj})
+        return self.collection.update({'name': name, 'namespace': namespace}, {'$set': obj})
 
     def get_all(self, fields=None):
         for each in self.collection.find({}, fields):
@@ -52,17 +55,17 @@ class ProjectDB(BaseProjectDB):
                 del each['_id']
             yield self._default_fields(each)
 
-    def get(self, name, fields=None):
-        each = self.collection.find_one({'name': name}, fields)
+    def get(self,  name, fields=None, namespace='default'):
+        each = self.collection.find_one({'namespace': namespace, 'name': name}, fields)
         if each and '_id' in each:
             del each['_id']
         return self._default_fields(each)
 
-    def check_update(self, timestamp, fields=None):
+    def check_update(self, timestamp, fields=None, namespace='default'):
         for project in self.get_all(fields=('updatetime', 'name')):
             if project['updatetime'] > timestamp:
-                project = self.get(project['name'], fields)
+                project = self.get(project['name'], fields, namespace)
                 yield self._default_fields(project)
 
-    def drop(self, name):
-        return self.collection.remove({'name': name})
+    def drop(self, name, namespace='default'):
+        return self.collection.remove({'namespace': namespace, 'name': name})

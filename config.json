@@ -1,0 +1,9 @@
+{
+    "taskdb": "redis+taskdb://10.120.124.243:6379/1",
+      "projectdb": "mongodb+projectdb://127.0.0.1:27017/pyspider_projectdb",
+      "resultdb": "mongodb+resultdb://127.0.0.1:27017/pyspider_resultdb",
+      "message_queue": "redis://10.120.124.243:6379/0",
+    "webui": {
+        "port": 5001
+    }
+}
